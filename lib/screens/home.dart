@@ -1,3 +1,5 @@
+import 'package:calls/screens/call.dart';
+import 'package:calls/utils/slide.dart';
 import 'package:calls/utils/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -15,28 +17,7 @@ class IncomingCallPage extends StatelessWidget {
             children: [
               const CallerDetails(),
               const SizedBox(height: 30),
-              Container(
-                width: 200,
-                margin: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.white.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 0),
-                      spreadRadius: 10,
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(600),
-                  child: Image.asset(
-                    "images/stacy.jpg",
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
+              const ContactImage(),
               const SizedBox(height: 30),
               SizedBox(
                 width: 100,
@@ -77,17 +58,25 @@ class IncomingCallPage extends StatelessWidget {
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  AcceptRejectButtons(
-                    icon: Icon(Icons.call_end),
-                    color: CallTheme.red,
+                children: [
+                  const Hero(
+                    tag: "Decline",
+                    child: PrimaryButton(
+                      icon: Icon(Icons.call_end),
+                      color: CallTheme.red,
+                    ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 50,
                   ),
-                  AcceptRejectButtons(
-                    icon: Icon(Icons.call),
+                  PrimaryButton(
+                    icon: const Icon(Icons.call),
                     color: CallTheme.green,
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        slidingRoute(const CallScreen()),
+                      );
+                    },
                   ),
                 ],
               )
@@ -99,89 +88,158 @@ class IncomingCallPage extends StatelessWidget {
   }
 }
 
+class ContactImage extends StatelessWidget {
+  final double width;
+  const ContactImage({
+    this.width = 200.0,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Hero(
+      tag: "contact",
+      child: Container(
+        width: width,
+        margin: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 0),
+              spreadRadius: 10,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(600),
+          child: Image.asset(
+            "images/stacy.jpg",
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class CallerDetails extends StatelessWidget {
-  const CallerDetails({Key? key}) : super(key: key);
+  final bool isCalling;
+  const CallerDetails({
+    Key? key,
+    this.isCalling = true,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Hero(
+      tag: "caller",
+      child: Column(
+        children: [
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: isCalling ? 'Incoming call via ' : "Calling via ",
+                  style: Theme.of(context).textTheme.headline6,
+                ),
+                TextSpan(
+                  text: 'VI',
+                  style: Theme.of(context).textTheme.headline6?.copyWith(
+                        color: CallTheme.orange,
+                      ),
+                ),
+                if (isCalling)
+                  TextSpan(
+                    text: ' from ',
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: Text(
+              "Stacy Smith",
+              style: Theme.of(context).textTheme.headline3,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Mobile +1 (919) 919-9191",
+            style: Theme.of(context).textTheme.headline6,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PrimaryButton extends StatelessWidget {
+  final String? label;
+  final bool isSelected;
+  final Icon icon;
+  final Color color;
+  final VoidCallback? onTap;
+  const PrimaryButton({
+    Key? key,
+    required this.icon,
+    required this.color,
+    this.onTap,
+    this.isSelected = false,
+    this.label,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: 'Incoming call via ',
-                style: Theme.of(context).textTheme.headline6,
+        ElevatedButton(
+          onPressed: onTap ?? () {},
+          child: icon,
+          style: ButtonStyle(
+            shadowColor: MaterialStateProperty.resolveWith(
+              (states) => CallTheme.white.withOpacity(
+                0.2,
               ),
-              TextSpan(
-                text: 'JIO',
-                style: Theme.of(context).textTheme.headline6?.copyWith(
-                      color: CallTheme.orange,
-                    ),
+            ),
+            foregroundColor: MaterialStateProperty.resolveWith(
+              (states) => CallTheme.white,
+            ),
+            backgroundColor: MaterialStateProperty.resolveWith(
+              (states) => color,
+            ),
+            overlayColor: MaterialStateProperty.resolveWith(
+              (states) => CallTheme.white.withOpacity(0.1),
+            ),
+            elevation: MaterialStateProperty.resolveWith(
+              (states) => 2,
+            ),
+            shape: MaterialStateProperty.resolveWith(
+              (states) => CircleBorder(
+                side: isSelected
+                    ? BorderSide(color: CallTheme.white.withOpacity(0.2))
+                    : BorderSide.none,
               ),
-              TextSpan(
-                text: ' from ',
-                style: Theme.of(context).textTheme.headline6,
-              ),
-            ],
+            ),
+            padding: MaterialStateProperty.resolveWith(
+              (states) => const EdgeInsets.all(22),
+            ),
           ),
         ),
-        const SizedBox(height: 16),
-        Center(
-          child: Text(
-            "Stacy Smith",
-            style: Theme.of(context).textTheme.headline3,
+        if (label != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            label!,
+            style: TextStyle(
+              color: isSelected ? CallTheme.white : CallTheme.greyish,
+              fontSize: 13,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          "Mobile +91-9876543210",
-          style: Theme.of(context).textTheme.headline6,
-        ),
+        ]
       ],
-    );
-  }
-}
-
-class AcceptRejectButtons extends StatelessWidget {
-  final Icon icon;
-  final Color color;
-  const AcceptRejectButtons({
-    Key? key,
-    required this.icon,
-    required this.color,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {},
-      child: icon,
-      style: ButtonStyle(
-        shadowColor: MaterialStateProperty.resolveWith(
-          (states) => CallTheme.white.withOpacity(
-            0.1,
-          ),
-        ),
-        foregroundColor: MaterialStateProperty.resolveWith(
-          (states) => CallTheme.white,
-        ),
-        backgroundColor: MaterialStateProperty.resolveWith(
-          (states) => color,
-        ),
-        overlayColor: MaterialStateProperty.resolveWith(
-          (states) => CallTheme.white.withOpacity(0.1),
-        ),
-        elevation: MaterialStateProperty.resolveWith(
-          (states) => 1,
-        ),
-        shape: MaterialStateProperty.resolveWith(
-          (states) => const CircleBorder(),
-        ),
-        padding: MaterialStateProperty.resolveWith(
-          (states) => const EdgeInsets.all(22),
-        ),
-      ),
     );
   }
 }
